@@ -9,23 +9,37 @@
 <body>
     <div class="container">
         <h1>Word Embeddings Playground</h1>
-        <p>Enter words into the formula to find an analogous word. The calculation is: <code>Word_A - Word_B + Word_C</code>.</p>
-        <p><strong>How it works:</strong> Each word is represented as a vector of numbers. The formula performs vector arithmetic: 
-        it takes the difference between A and B (capturing their relationship), then adds that to C to find a word with a similar relationship to C.</p>
+        <p>Enter words into the formula to explore vector arithmetic:</p>
+        <ul>
+            <li><strong>Similarity:</strong> <code>Word_A</code> (find words similar to A)</li>
+            <li><strong>Subtraction:</strong> <code>Word_A - Word_B = ?</code> (leave Word C empty)</li>
+            <li><strong>Addition:</strong> <code>Word_A + Word_C = ?</code> (leave Word B empty)</li>
+            <li><strong>Full Analogy:</strong> <code>Word_A - Word_B + Word_C = ?</code> (fill all three fields)</li>
+        </ul>
+        <p><strong>How it works:</strong> Each word is represented as a vector of numbers. The formula performs vector arithmetic to find semantically related words.</p>
         
         <div class="formula-input-container">
             <div class="formula-input">
-                <input type="text" id="word2" placeholder="Word A (e.g., hitler)" value="hitler">
+                <input type="text" id="word2" placeholder="Word A (required)" value="king">
                 <span class="operator">-</span>
-                <input type="text" id="word1" placeholder="Word B (e.g., germany)" value="germany">
+                <input type="text" id="word1" placeholder="Word B (optional)" value="">
                 <span class="operator">+</span>
-                <input type="text" id="word3" placeholder="Word C (e.g., italy)" value="italy">
+                <input type="text" id="word3" placeholder="Word C (optional)" value="">
                 <span class="equals-sign">= ?</span>
             </div>
-            <p class="example-text">Example: <i>hitler</i> - <i>germany</i> + <i>italy</i> &rarr; expected: <i>mussolini</i></p>
+            <div class="mode-examples">
+                <p class="example-text"><strong>Similarity:</strong> <i>king</i> → <i>queen, royal, palace...</i></p>
+                <p class="example-text"><strong>Subtraction:</strong> <i>king</i> - <i>man</i> → relationship concepts</p>
+                <p class="example-text"><strong>Addition:</strong> <i>king</i> + <i>woman</i> → combined concepts</p>
+                <p class="example-text"><strong>Analogy:</strong> <i>king</i> - <i>man</i> + <i>woman</i> → <i>queen</i></p>
+            </div>
         </div>
         
-        <button id="calculateBtn">Calculate Analogy</button>
+        <button id="calculateBtn">Calculate Vector Operation</button>
+        
+        <div id="operation-info" class="operation-info">
+            <p>Current operation: <span id="current-operation">Fill in at least Word A and one other field</span></p>
+        </div>
         
         <h2>Results:</h2>
         <div id="results">

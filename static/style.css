@@ -168,3 +168,30 @@ p code {
 .clickable-result:hover {
     background-color: #d0e7ff;
 }
+
+.operation-info {
+    background-color: #e7f3ff;
+    border: 1px solid #b8daff;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.operation-info p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.mode-examples {
+    margin-top: 15px;
+}
+
+.mode-examples .example-text {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.mode-examples .example-text:first-child {
+    margin-top: 0;
+}

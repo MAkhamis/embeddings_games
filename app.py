@@ -29,38 +29,92 @@ def analogy():
         return jsonify({"error": "Word embedding model not loaded."}), 500
 
     data = request.get_json()
-    word1_str = data.get('word1', '').lower()
-    word2_str = data.get('word2', '').lower()
-    word3_str = data.get('word3', '').lower()
+    word1_str = data.get('word1', '').strip().lower()  # Word B in formula
+    word2_str = data.get('word2', '').strip().lower()  # Word A in formula
+    word3_str = data.get('word3', '').strip().lower()  # Word C in formula
 
-    if not all([word1_str, word2_str, word3_str]):
-        return jsonify({"error": "Please provide all three words."}), 400
+    # Check which mode we're in based on empty fields
+    mode = None
+    if not word3_str and word1_str and word2_str:
+        # Mode 1: A - B = ? (word C is empty)
+        mode = "subtraction"
+    elif not word1_str and word2_str and word3_str:
+        # Mode 2: A + C = ? (word B is empty)
+        mode = "addition"
+    elif word1_str and word2_str and word3_str:
+        # Mode 3: A - B + C = ? (traditional analogy)
+        mode = "analogy"
+    elif not word1_str and not word3_str and word2_str:
+        # Mode 4: Find similar words to A (both B and C are empty)
+        mode = "similarity"
+    else:
+        return jsonify({
+            "error": "Please provide either:\n" +
+                    "• Just Word A (to find similar words)\n" +
+                    "• Word A and Word B (for A - B = ?)\n" +
+                    "• Word A and Word C (for A + C = ?)\n" +
+                    "• All three words (for A - B + C = ?)"
+        }), 400
 
     try:
-        # Get embeddings for each word
-        # Convert numpy arrays to lists for JSON serialization
-        vec1 = model[word1_str].tolist() if word1_str in model else None
-        vec2 = model[word2_str].tolist() if word2_str in model else None
-        vec3 = model[word3_str].tolist() if word3_str in model else None
-
+        # Get embeddings for available words and check vocabulary
         missing_words = []
-        if vec1 is None: missing_words.append(word1_str)
-        if vec2 is None: missing_words.append(word2_str)
-        if vec3 is None: missing_words.append(word3_str)
+        vec1 = None  # Word B
+        vec2 = None  # Word A  
+        vec3 = None  # Word C
+        
+        if word1_str:
+            vec1 = model[word1_str].tolist() if word1_str in model else None
+            if vec1 is None: missing_words.append(f"Word B: {word1_str}")
+                
+        if word2_str:
+            vec2 = model[word2_str].tolist() if word2_str in model else None
+            if vec2 is None: missing_words.append(f"Word A: {word2_str}")
+                
+        if word3_str:
+            vec3 = model[word3_str].tolist() if word3_str in model else None
+            if vec3 is None: missing_words.append(f"Word C: {word3_str}")
 
         if missing_words:
             return jsonify({"error": f"Word(s) not found in vocabulary: {', '.join(missing_words)}"}), 400
             
-        # Analogy: word1 is to word2 as word3 is to ?
-        # This is equivalent to: word3 + (word2 - word1)
-        # gensim's most_similar uses cosine similarity by default.
-        similar_words = model.most_similar(positive=[word3_str, word2_str], negative=[word1_str], topn=10)
+        # Perform calculation based on mode
+        result_vector = None
+        similar_words = None
+        calculation_description = ""
         
-        # Calculate the resulting vector manually: word3 + (word2 - word1)
-        vec1_np = np.array(vec1)
-        vec2_np = np.array(vec2)
-        vec3_np = np.array(vec3)
-        result_vector = vec3_np + (vec2_np - vec1_np)
+        if mode == "subtraction":
+            # A - B = ?
+            vec1_np = np.array(vec1)  # Word B
+            vec2_np = np.array(vec2)  # Word A
+            result_vector = vec2_np - vec1_np  # A - B
+            similar_words = model.most_similar([result_vector], topn=10)
+            calculation_description = f"{word2_str} - {word1_str}"
+            
+        elif mode == "addition":
+            # A + C = ?
+            vec2_np = np.array(vec2)  # Word A
+            vec3_np = np.array(vec3)  # Word C
+            result_vector = vec2_np + vec3_np  # A + C
+            similar_words = model.most_similar([result_vector], topn=10)
+            calculation_description = f"{word2_str} + {word3_str}"
+            
+        elif mode == "analogy":
+            # Traditional analogy: A - B + C = ?
+            vec1_np = np.array(vec1)  # Word B
+            vec2_np = np.array(vec2)  # Word A
+            vec3_np = np.array(vec3)  # Word C
+            result_vector = vec3_np + (vec2_np - vec1_np)  # C + (A - B)
+            similar_words = model.most_similar(positive=[word3_str, word2_str], negative=[word1_str], topn=10)
+            calculation_description = f"{word2_str} - {word1_str} + {word3_str}"
+            
+        elif mode == "similarity":
+            # Find words similar to A
+            vec2_np = np.array(vec2)  # Word A
+            result_vector = vec2_np  # Just the word vector itself
+            similar_words = model.most_similar(word2_str, topn=10)
+            calculation_description = f"Words similar to {word2_str}"
+        
         result_vector_list = result_vector.tolist()
         
         # Calculate cosine similarity between result vector and the first similar word
@@ -81,13 +135,15 @@ def analogy():
         return jsonify({
             "result": similar_words,
             "embeddings": {
-                "word1": {"word": word1_str, "vector": vec1},
-                "word2": {"word": word2_str, "vector": vec2},
-                "word3": {"word": word3_str, "vector": vec3}
+                "word1": {"word": word1_str, "vector": vec1} if word1_str else None,
+                "word2": {"word": word2_str, "vector": vec2} if word2_str else None,
+                "word3": {"word": word3_str, "vector": vec3} if word3_str else None
             },
             "result_vector": result_vector_list,
             "distance_info": distance_to_first,
-            "similarity_method": "cosine_similarity"
+            "similarity_method": "cosine_similarity",
+            "calculation_mode": mode,
+            "calculation_description": calculation_description
         })
     except KeyError as e: # Should be caught by the checks above, but as a fallback
         return jsonify({"error": f"Word not found in vocabulary: {e.args[0]}"}), 400
