@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embeddings Playground - Formula</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Word Embeddings Playground</h1>
+        <p>Enter words into the formula to find an analogous word. The calculation is: <code>Word_A - Word_B + Word_C</code>.</p>
+        <p><strong>How it works:</strong> Each word is represented as a vector of numbers. The formula performs vector arithmetic: 
+        it takes the difference between A and B (capturing their relationship), then adds that to C to find a word with a similar relationship to C.</p>
+        
+        <div class="formula-input-container">
+            <div class="formula-input">
+                <input type="text" id="word2" placeholder="Word A (e.g., hitler)" value="hitler">
+                <span class="operator">-</span>
+                <input type="text" id="word1" placeholder="Word B (e.g., germany)" value="germany">
+                <span class="operator">+</span>
+                <input type="text" id="word3" placeholder="Word C (e.g., italy)" value="italy">
+                <span class="equals-sign">= ?</span>
+            </div>
+            <p class="example-text">Example: <i>hitler</i> - <i>germany</i> + <i>italy</i> &rarr; expected: <i>mussolini</i></p>
+        </div>
+        
+        <button id="calculateBtn">Calculate Analogy</button>
+        
+        <h2>Results:</h2>
+        <div id="results">
+            <p>Enter words above and click "Calculate Analogy".</p>
+        </div>
+        <div id="error" class="error-message"></div>
+
+        <h2>Input Word Embeddings:</h2>
+        <div id="embeddings-display">
+            <div class="embedding-item">
+                <strong>Word A (<span id="embWordA_str"></span>):</strong>
+                <textarea id="embWordA_vec" readonly placeholder="Vector will appear here..."></textarea>
+            </div>
+            <div class="embedding-item">
+                <strong>Word B (<span id="embWordB_str"></span>):</strong>
+                <textarea id="embWordB_vec" readonly placeholder="Vector will appear here..."></textarea>
+            </div>
+            <div class="embedding-item">
+                <strong>Word C (<span id="embWordC_str"></span>):</strong>
+                <textarea id="embWordC_vec" readonly placeholder="Vector will appear here..."></textarea>
+            </div>
+        </div>
+
+        <h2>Formula Result Vector:</h2>
+        <div id="result-vector-display">
+            <p><strong>Result of A - B + C:</strong></p>
+            <textarea id="resultVector" readonly placeholder="Formula result vector will appear here..."></textarea>
+        </div>
+
+        <h2>Distance Analysis:</h2>
+        <div id="distance-display">
+            <p><strong>Understanding Similarity Metrics:</strong></p>
+            <ul>
+                <li><strong>Cosine Similarity:</strong> Measures the angle between vectors (0 to 1, higher = more similar)</li>
+                <li><strong>Euclidean Distance:</strong> Measures straight-line distance between vectors (lower = more similar)</li>
+            </ul>
+            <p id="distanceInfo">Click on any result word to see distance calculations.</p>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
