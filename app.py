@@ -4,19 +4,73 @@ import numpy as np
 
 app = Flask(__name__)
 
-# Load a pre-trained model (e.g., 'glove-wiki-gigaword-50')
-# This might take a few minutes the first time it's run as it downloads the model.
+# Available models with their descriptions
+AVAILABLE_MODELS = {
+    'glove-wiki-gigaword-50': {
+        'name': 'GloVe Wiki 50D',
+        'description': 'Fast, lightweight (50 dimensions)',
+        'size': '~66MB'
+    },
+    'glove-wiki-gigaword-100': {
+        'name': 'GloVe Wiki 100D', 
+        'description': 'Balanced performance (100 dimensions)',
+        'size': '~128MB'
+    },
+    'glove-wiki-gigaword-200': {
+        'name': 'GloVe Wiki 200D',
+        'description': 'High quality (200 dimensions)', 
+        'size': '~252MB'
+    },
+    'glove-wiki-gigaword-300': {
+        'name': 'GloVe Wiki 300D',
+        'description': 'Highest GloVe quality (300 dimensions)',
+        'size': '~376MB'
+    },
+    'word2vec-google-news-300': {
+        'name': 'Word2Vec Google News',
+        'description': 'Most powerful, trained on news (300 dimensions)',
+        'size': '~1.6GB'
+    },
+    'fasttext-wiki-news-subwords-300': {
+        'name': 'FastText Wiki+News',
+        'description': 'Handles unknown words via subwords (300 dimensions)',
+        'size': '~958MB'
+    }
+}
+
+# Load default model
+current_model_name = 'glove-wiki-gigaword-100'
+model = None
+model_loading = False
+
+def load_model(model_name):
+    global model, current_model_name, model_loading
+    if model_name not in AVAILABLE_MODELS:
+        raise ValueError(f"Model {model_name} not supported")
+    
+    if current_model_name == model_name and model is not None:
+        return model
+    
+    model_loading = True
+    try:
+        print(f"Loading {AVAILABLE_MODELS[model_name]['name']} model...")
+        print(f"Size: {AVAILABLE_MODELS[model_name]['size']} - This may take a few minutes...")
+        model = api.load(model_name)
+        current_model_name = model_name
+        print(f"Model '{model_name}' loaded successfully.")
+        return model
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        print("Please ensure you have an internet connection for the first download.")
+        raise e
+    finally:
+        model_loading = False
+
+# Load default model on startup
 try:
-    print("Loading Word2Vec model...")
-    # You can choose other models like 'word2vec-google-news-300' (larger, more accurate)
-    # or 'glove-twitter-25' (smaller, trained on tweets)
-    model_name = 'glove-wiki-gigaword-50'
-    model = api.load(model_name)
-    print(f"Model '{model_name}' loaded successfully.")
+    load_model(current_model_name)
 except Exception as e:
-    print(f"Error loading model: {e}")
-    print("Please ensure you have an internet connection for the first download.")
-    print("You can try other models from gensim.downloader.info()['models'].keys()")
+    print(f"Failed to load default model: {e}")
     model = None
 
 @app.route('/')
